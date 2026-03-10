@@ -1,14 +1,12 @@
 package handler
 
 import (
-	"log"
 	"net/http"
 	"os"
 
-	delivery "ybg-backend-go/internal/delivery/http"
 	"ybg-backend-go/internal/delivery/http/middleware"
 	"ybg-backend-go/internal/repository"
-	"ybg-backend-go/internal/usecase"
+	"ybg-backend-go/internal/wire" // Pastikan import path ini benar
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
@@ -18,17 +16,10 @@ import (
 
 var router *gin.Engine
 
-// Fungsi init() akan dijalankan otomatis oleh Vercel saat function cold start
 func init() {
-	// Load .env hanya untuk lokal, di Vercel pakai Environment Variables dashboard
 	_ = godotenv.Load()
 
 	dsn := os.Getenv("DB_URL")
-	if dsn == "" {
-		log.Println("Warning: DB_URL is not set")
-		return
-	}
-
 	db, err := gorm.Open(postgres.New(postgres.Config{
 		DSN:                  dsn,
 		PreferSimpleProtocol: true,
@@ -36,43 +27,24 @@ func init() {
 		PrepareStmt: false,
 	})
 	if err != nil {
-		log.Printf("Failed to connect to database: %v", err)
 		return
 	}
 
-	// Setup Repositories, Usecases, & Handlers
+	// Seed Admin jika diperlukan
 	repository.SeedAdmin(db)
 
-	productRepo := repository.NewProductRepository(db)
-	productUC := usecase.NewProductUsecase(productRepo)
-	productHandler := delivery.NewProductHandler(productUC)
+	// Panggil Injector dari Wire
+	userHandler := wire.InitializeUserHandler(db)
+	productHandler := wire.InitializeProductHandler(db)
+	newsHandler := wire.InitializeNewsHandler(db)
+	brandHandler := wire.InitializeBrandHandler(db)
+	categoryHandler := wire.InitializeCategoryHandler(db)
+	pHandler := wire.InitializePointHandler(db)
 
-	userRepo := repository.NewUserRepository(db)
-	pointRepo := repository.NewPointRepository(db)
-	userUC := usecase.NewUserUsecase(userRepo, pointRepo)
-	userHandler := delivery.NewUserHandler(userUC)
-
-	newsRepo := repository.NewNewsRepository(db)
-	newsUC := usecase.NewNewsUsecase(newsRepo)
-	newsHandler := delivery.NewNewsHandler(newsUC)
-
-	brandRepo := repository.NewBrandRepository(db)
-	brandUC := usecase.NewBrandUsecase(brandRepo)
-	brandHandler := delivery.NewBrandHandler(brandUC)
-
-	categoryRepo := repository.NewCategoryRepository(db)
-	categoryUC := usecase.NewCategoryUsecase(categoryRepo)
-	categoryHandler := delivery.NewCategoryHandler(categoryUC)
-
-	pRepo := repository.NewPointRepository(db)
-	pUC := usecase.NewPointUsecase(pRepo)
-	pHandler := delivery.NewPointHandler(pUC)
-
-	// Inisialisasi Gin dalam mode Release untuk production
 	gin.SetMode(gin.ReleaseMode)
 	r := gin.Default()
 
-	// --- ROUTES ---
+	// --- Routes Setup ---
 	r.POST("/register", userHandler.Create)
 	r.POST("/login", userHandler.Login)
 	r.GET("/health", func(c *gin.Context) {
@@ -82,6 +54,7 @@ func init() {
 	api := r.Group("/api")
 	api.Use(middleware.AuthMiddleware())
 	{
+		// Groups & Handlers
 		brandAdmin := api.Group("/brand")
 		brandAdmin.Use(middleware.RoleMiddleware("admin"))
 		{
@@ -98,6 +71,7 @@ func init() {
 
 		api.GET("/products", productHandler.GetAll)
 		api.GET("/products/:id", productHandler.GetByID)
+		
 		productAdmin := api.Group("/products")
 		productAdmin.Use(middleware.RoleMiddleware("admin"))
 		{
@@ -130,10 +104,9 @@ func init() {
 	router = r
 }
 
-// Handler adalah entry point yang diwajibkan oleh Vercel
 func Handler(w http.ResponseWriter, r *http.Request) {
 	if router == nil {
-		http.Error(w, "Internal Server Error: Router not initialized", http.StatusInternalServerError)
+		http.Error(w, "Router not initialized", http.StatusInternalServerError)
 		return
 	}
 	router.ServeHTTP(w, r)
