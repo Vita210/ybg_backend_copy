@@ -1,12 +1,11 @@
 package handler
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 	"os"
 
-	delivery "ybg-backend-go/internal/delivery/http" // Fixed Typo & Added Alias
+	delivery "ybg-backend-go/internal/delivery/http"
 	"ybg-backend-go/internal/delivery/http/middleware"
 	"ybg-backend-go/internal/repository"
 	"ybg-backend-go/internal/usecase"
@@ -19,7 +18,9 @@ import (
 
 var router *gin.Engine
 
+// Fungsi init() akan dijalankan otomatis oleh Vercel saat function cold start
 func init() {
+	// Load .env hanya untuk lokal, di Vercel pakai Environment Variables dashboard
 	_ = godotenv.Load()
 
 	dsn := os.Getenv("DB_URL")
@@ -39,35 +40,39 @@ func init() {
 		return
 	}
 
+	// Setup Repositories, Usecases, & Handlers
 	repository.SeedAdmin(db)
 
 	productRepo := repository.NewProductRepository(db)
 	productUC := usecase.NewProductUsecase(productRepo)
-	productHandler := delivery.NewProductHandler(productUC) // Use Alias
+	productHandler := delivery.NewProductHandler(productUC)
 
 	userRepo := repository.NewUserRepository(db)
 	pointRepo := repository.NewPointRepository(db)
 	userUC := usecase.NewUserUsecase(userRepo, pointRepo)
-	userHandler := delivery.NewUserHandler(userUC) // Use Alias
+	userHandler := delivery.NewUserHandler(userUC)
 
 	newsRepo := repository.NewNewsRepository(db)
 	newsUC := usecase.NewNewsUsecase(newsRepo)
-	newsHandler := delivery.NewNewsHandler(newsUC) // Use Alias
+	newsHandler := delivery.NewNewsHandler(newsUC)
 
 	brandRepo := repository.NewBrandRepository(db)
 	brandUC := usecase.NewBrandUsecase(brandRepo)
-	brandHandler := delivery.NewBrandHandler(brandUC) // Use Alias
+	brandHandler := delivery.NewBrandHandler(brandUC)
 
 	categoryRepo := repository.NewCategoryRepository(db)
 	categoryUC := usecase.NewCategoryUsecase(categoryRepo)
-	categoryHandler := delivery.NewCategoryHandler(categoryUC) // Use Alias
+	categoryHandler := delivery.NewCategoryHandler(categoryUC)
 
 	pRepo := repository.NewPointRepository(db)
 	pUC := usecase.NewPointUsecase(pRepo)
-	pHandler := delivery.NewPointHandler(pUC) // Use Alias
+	pHandler := delivery.NewPointHandler(pUC)
 
+	// Inisialisasi Gin dalam mode Release untuk production
+	gin.SetMode(gin.ReleaseMode)
 	r := gin.Default()
 
+	// --- ROUTES ---
 	r.POST("/register", userHandler.Create)
 	r.POST("/login", userHandler.Login)
 	r.GET("/health", func(c *gin.Context) {
@@ -125,15 +130,11 @@ func init() {
 	router = r
 }
 
+// Handler adalah entry point yang diwajibkan oleh Vercel
 func Handler(w http.ResponseWriter, r *http.Request) {
-	router.ServeHTTP(w, r)
-}
-
-func main() {
-	port := os.Getenv("APP_PORT")
-	if port == "" {
-		port = "8080"
+	if router == nil {
+		http.Error(w, "Internal Server Error: Router not initialized", http.StatusInternalServerError)
+		return
 	}
-	fmt.Printf("Server is running locally on port %s...\n", port)
-	router.Run(":" + port)
+	router.ServeHTTP(w, r)
 }
