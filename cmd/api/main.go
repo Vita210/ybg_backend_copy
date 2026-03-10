@@ -3,10 +3,11 @@ package main
 import (
 	"fmt"
 	"log"
+	"net/http"
 	"os"
 
-	"ybg-backend-go/internal/delivery/http"
-	"ybg-backend-go/internal/delivery/http/middleware" // Import middleware Anda
+	delivery "ybg-backend-go/internal/delivery/http" // Fixed Typo & Added Alias
+	"ybg-backend-go/internal/delivery/http/middleware"
 	"ybg-backend-go/internal/repository"
 	"ybg-backend-go/internal/usecase"
 
@@ -16,16 +17,15 @@ import (
 	"gorm.io/gorm"
 )
 
-func main() {
-	// 1. Load environment variables
-	if err := godotenv.Load(); err != nil {
-		log.Println("Warning: .env file not found, using system env")
-	}
+var router *gin.Engine
 
-	// 2. Konfigurasi Database Connection
+func init() {
+	_ = godotenv.Load()
+
 	dsn := os.Getenv("DB_URL")
 	if dsn == "" {
-		log.Fatal("DB_URL is not set in .env")
+		log.Println("Warning: DB_URL is not set")
+		return
 	}
 
 	db, err := gorm.Open(postgres.New(postgres.Config{
@@ -35,85 +35,64 @@ func main() {
 		PrepareStmt: false,
 	})
 	if err != nil {
-		log.Fatalf("Failed to connect to database: %v", err)
+		log.Printf("Failed to connect to database: %v", err)
+		return
 	}
 
-	sqlDB, _ := db.DB()
-	if err := sqlDB.Ping(); err != nil {
-		log.Fatalf("Database is unreachable: %v", err)
-	}
-
-	fmt.Println("Successfully connected to Supabase via Transaction Pooler!")
-
-	// 3. Seeding & Initialitation
 	repository.SeedAdmin(db)
 
 	productRepo := repository.NewProductRepository(db)
 	productUC := usecase.NewProductUsecase(productRepo)
-	productHandler := http.NewProductHandler(productUC)
+	productHandler := delivery.NewProductHandler(productUC) // Use Alias
 
 	userRepo := repository.NewUserRepository(db)
 	pointRepo := repository.NewPointRepository(db)
 	userUC := usecase.NewUserUsecase(userRepo, pointRepo)
-	userHandler := http.NewUserHandler(userUC)
+	userHandler := delivery.NewUserHandler(userUC) // Use Alias
 
 	newsRepo := repository.NewNewsRepository(db)
 	newsUC := usecase.NewNewsUsecase(newsRepo)
-	newsHandler := http.NewNewsHandler(newsUC)
+	newsHandler := delivery.NewNewsHandler(newsUC) // Use Alias
 
 	brandRepo := repository.NewBrandRepository(db)
 	brandUC := usecase.NewBrandUsecase(brandRepo)
-	brandHandler := http.NewBrandHandler(brandUC)
+	brandHandler := delivery.NewBrandHandler(brandUC) // Use Alias
 
 	categoryRepo := repository.NewCategoryRepository(db)
 	categoryUC := usecase.NewCategoryUsecase(categoryRepo)
-	categoryHandler := http.NewCategoryHandler(categoryUC)
+	categoryHandler := delivery.NewCategoryHandler(categoryUC) // Use Alias
 
 	pRepo := repository.NewPointRepository(db)
 	pUC := usecase.NewPointUsecase(pRepo)
-	pHandler := http.NewPointHandler(pUC)
+	pHandler := delivery.NewPointHandler(pUC) // Use Alias
 
-	// 4. Setup Gin Router
 	r := gin.Default()
 
-	// --- 5. REGISTRASI ROUTES ---
-
-	// A. Public Routes (Tanpa Login)
 	r.POST("/register", userHandler.Create)
-	r.POST("/login", userHandler.Login) // Fungsi Login harus ada di UserHandler
+	r.POST("/login", userHandler.Login)
 	r.GET("/health", func(c *gin.Context) {
 		c.JSON(200, gin.H{"status": "UP", "database": "connected"})
 	})
 
-	// B. Protected Routes (Harus Login)
 	api := r.Group("/api")
-	api.GET("/news", newsHandler.GetAll)
-	api.GET("/products", productHandler.GetAll)
-	api.GET("/products/:id", productHandler.GetByID)
-	api.GET("/brand", brandHandler.GetAll)
-	api.GET("/category", categoryHandler.GetAll)
-	api.Use(middleware.AuthMiddleware()) // Cek token JWT
+	api.Use(middleware.AuthMiddleware())
 	{
-		// --- FITUR PRODUCT ---
-		// Semua user (Admin & Customer) bisa Lihat
-		brandAdmin := api.Group("/brand") // Group ini sudah prefix /api/brand
+		brandAdmin := api.Group("/brand")
 		brandAdmin.Use(middleware.RoleMiddleware("admin"))
 		{
-			// Gunakan 'brandAdmin', JANGAN 'api'
-			brandAdmin.POST("/", brandHandler.Create)      // POST untuk Create
-			brandAdmin.DELETE("/:id", brandHandler.Delete) // Tambahkan :id untuk Delete
+			brandAdmin.POST("/", brandHandler.Create)
+			brandAdmin.DELETE("/:id", brandHandler.Delete)
 		}
 
-		// --- FITUR CATEGORY ---
-		categoryAdmin := api.Group("/category") // Group ini sudah prefix /api/category
+		categoryAdmin := api.Group("/category")
 		categoryAdmin.Use(middleware.RoleMiddleware("admin"))
 		{
-			// Gunakan 'categoryAdmin', JANGAN 'api'
-			categoryAdmin.POST("/", categoryHandler.Create)      // POST untuk Create
-			categoryAdmin.DELETE("/:id", categoryHandler.Delete) // Tambahkan :id untuk Delete
+			categoryAdmin.POST("/", categoryHandler.Create)
+			categoryAdmin.DELETE("/:id", categoryHandler.Delete)
 		}
 
-		// Hanya Admin yang bisa Create, Update, Delete Product
+		api.GET("/products", productHandler.GetAll)
+		api.GET("/products/:id", productHandler.GetByID)
 		productAdmin := api.Group("/products")
 		productAdmin.Use(middleware.RoleMiddleware("admin"))
 		{
@@ -121,18 +100,15 @@ func main() {
 			productAdmin.PUT("/:id", productHandler.Update)
 			productAdmin.DELETE("/:id", productHandler.Delete)
 		}
-		// Group Point
+
 		points := api.Group("/points")
 		{
-			// Semua yang Login bisa lihat history
 			points.GET("/history", pHandler.GetHistory)
-
-			// Khusus Admin
-			// Kita langsung pasang Middleware di baris rutenya saja supaya lebih clear
 			points.POST("/", middleware.RoleMiddleware("admin"), pHandler.CreatePoint)
 			points.GET("/all", middleware.RoleMiddleware("admin"), pHandler.GetAllSummaries)
 		}
 
+		api.GET("/news", newsHandler.GetAll)
 		newsAdmin := api.Group("/news")
 		newsAdmin.Use(middleware.RoleMiddleware("admin"))
 		{
@@ -141,27 +117,23 @@ func main() {
 			newsAdmin.DELETE("/:id", newsHandler.Delete)
 		}
 
-		// --- FITUR USER / PROFILE ---
-		// Admin bisa lihat semua list user
 		api.GET("/users", middleware.RoleMiddleware("admin"), userHandler.GetAll)
-
-		// Customer & Admin bisa lihat/update profil sendiri
 		api.GET("/profile", userHandler.GetByID)
 		api.PUT("/profile", userHandler.Update)
-
-		// Di dalam group admi
-
-		// --- FITUR POINT (Read Only) ---
-		// api.GET("/points/total", userHandler.GetPointTotal)
-		// api.GET("/points/history", userHandler.GetPointHistory)
 	}
 
-	// 6. Jalankan Server
+	router = r
+}
+
+func Handler(w http.ResponseWriter, r *http.Request) {
+	router.ServeHTTP(w, r)
+}
+
+func main() {
 	port := os.Getenv("APP_PORT")
 	if port == "" {
 		port = "8080"
 	}
-
-	fmt.Printf("Server is running on port %s...\n", port)
-	r.Run(":" + port)
+	fmt.Printf("Server is running locally on port %s...\n", port)
+	router.Run(":" + port)
 }
