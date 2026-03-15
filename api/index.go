@@ -6,7 +6,7 @@ import (
 
 	"ybg-backend-copy/internal/delivery/http/middleware"
 	"ybg-backend-copy/internal/repository"
-	"ybg-backend-copy/internal/wire" // Pastikan import path ini benar
+	"ybg-backend-copy/wire" // Pastikan import path ini benar
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
