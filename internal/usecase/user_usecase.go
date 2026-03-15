@@ -3,9 +3,9 @@ package usecase
 import (
 	"errors"
 	"time"
-	"ybg-backend-go/internal/entity"
-	"ybg-backend-go/internal/repository"
-	"ybg-backend-go/pkg/utils"
+	"ybg-backend-copy/internal/entity"
+	"ybg-backend-copy/internal/repository"
+	"ybg-backend-copy/pkg/utils"
 
 	"github.com/google/uuid"
 )

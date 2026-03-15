@@ -1,8 +1,8 @@
 package usecase
 
 import (
-	"ybg-backend-go/internal/entity"
-	"ybg-backend-go/internal/repository"
+	"ybg-backend-copy/internal/entity"
+	"ybg-backend-copy/internal/repository"
 )
 
 type CategoryUsecase interface {

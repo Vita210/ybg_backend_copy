@@ -3,9 +3,9 @@ package http
 import (
 	"errors"
 	"net/http"
-	"ybg-backend-go/internal/entity"
-	"ybg-backend-go/internal/usecase"
-	"ybg-backend-go/pkg/utils"
+	"ybg-backend-copy/internal/entity"
+	"ybg-backend-copy/internal/usecase"
+	"ybg-backend-copy/pkg/utils"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"

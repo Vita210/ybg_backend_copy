@@ -4,9 +4,9 @@ import (
 	"net/http"
 	"os"
 
-	"ybg-backend-go/internal/delivery/http/middleware"
-	"ybg-backend-go/internal/repository"
-	"ybg-backend-go/internal/wire" // Pastikan import path ini benar
+	"ybg-backend-copy/internal/delivery/http/middleware"
+	"ybg-backend-copy/internal/repository"
+	"ybg-backend-copy/internal/wire" // Pastikan import path ini benar
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
@@ -71,7 +71,7 @@ func init() {
 
 		api.GET("/products", productHandler.GetAll)
 		api.GET("/products/:id", productHandler.GetByID)
-		
+
 		productAdmin := api.Group("/products")
 		productAdmin.Use(middleware.RoleMiddleware("admin"))
 		{

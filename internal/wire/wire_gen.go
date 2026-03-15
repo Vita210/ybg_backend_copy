@@ -7,11 +7,12 @@
 package wire
 
 import (
+	"ybg-backend-copy/internal/delivery/http"
+	"ybg-backend-copy/internal/repository"
+	"ybg-backend-copy/internal/usecase"
+
 	"github.com/google/wire"
 	"gorm.io/gorm"
-	"ybg-backend-go/internal/delivery/http"
-	"ybg-backend-go/internal/repository"
-	"ybg-backend-go/internal/usecase"
 )
 
 // Injectors from wire.go:

@@ -4,8 +4,8 @@ import (
 	"errors"
 	"net/http"
 	"strconv"
-	"ybg-backend-go/internal/entity"
-	"ybg-backend-go/internal/usecase"
+	"ybg-backend-copy/internal/entity"
+	"ybg-backend-copy/internal/usecase"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"

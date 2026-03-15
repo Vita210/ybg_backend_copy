@@ -1,9 +1,9 @@
 package wire
 
 import (
-	"ybg-backend-go/internal/delivery/http"
-	"ybg-backend-go/internal/repository"
-	"ybg-backend-go/internal/usecase"
+	"ybg-backend-copy/internal/delivery/http"
+	"ybg-backend-copy/internal/repository"
+	"ybg-backend-copy/internal/usecase"
 
 	"github.com/google/wire"
 	"gorm.io/gorm"

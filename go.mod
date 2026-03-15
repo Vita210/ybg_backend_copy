@@ -1,4 +1,4 @@
-module ybg-backend-go
+module ybg-backend-copy
 
 go 1.25.0
 

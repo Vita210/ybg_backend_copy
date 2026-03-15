@@ -1,7 +1,7 @@
 package repository
 
 import (
-	"ybg-backend-go/internal/entity"
+	"ybg-backend-copy/internal/entity"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -19,10 +19,11 @@ type UserRepository interface {
 type userRepo struct {
 	db *gorm.DB
 }
+
 func (r *userRepo) GetByEmail(email string) (entity.User, error) {
-    var user entity.User
-    err := r.db.Where("email = ?", email).First(&user).Error
-    return user, err
+	var user entity.User
+	err := r.db.Where("email = ?", email).First(&user).Error
+	return user, err
 }
 func NewUserRepository(db *gorm.DB) UserRepository {
 	return &userRepo{db: db}
