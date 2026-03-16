@@ -3,8 +3,8 @@ package http
 import (
 	"net/http"
 	"strconv"
-	"ybg-backend-copy/internal/entity"
-	"ybg-backend-copy/internal/usecase"
+	"ybg-backend-copy/modules/entity"
+	"ybg-backend-copy/modules/usecase"
 
 	"github.com/gin-gonic/gin"
 )

@@ -1,8 +1,8 @@
 package usecase
 
 import (
-	"ybg-backend-copy/internal/entity"
-	"ybg-backend-copy/internal/repository"
+	"ybg-backend-copy/modules/entity"
+	"ybg-backend-copy/modules/repository"
 )
 
 type BrandUsecase interface {

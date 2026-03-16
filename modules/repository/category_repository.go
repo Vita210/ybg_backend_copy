@@ -1,7 +1,7 @@
 package repository
 
 import (
-	"ybg-backend-copy/internal/entity"
+	"ybg-backend-copy/modules/entity"
 
 	"gorm.io/gorm"
 )
