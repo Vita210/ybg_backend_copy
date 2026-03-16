@@ -55,14 +55,14 @@ func init() {
 	api.Use(middleware.AuthMiddleware())
 	{
 		// Groups & Handlers
-		brandAdmin := api.Group("/brand")
+		brandAdmin := api.Group("/admin/brand")
 		brandAdmin.Use(middleware.RoleMiddleware("admin"))
 		{
 			brandAdmin.POST("/", brandHandler.Create)
 			brandAdmin.DELETE("/:id", brandHandler.Delete)
 		}
 
-		categoryAdmin := api.Group("/category")
+		categoryAdmin := api.Group("/admin/category")
 		categoryAdmin.Use(middleware.RoleMiddleware("admin"))
 		{
 			categoryAdmin.POST("/", categoryHandler.Create)
@@ -72,7 +72,7 @@ func init() {
 		api.GET("/products", productHandler.GetAll)
 		api.GET("/products/:id", productHandler.GetByID)
 
-		productAdmin := api.Group("/products")
+		productAdmin := api.Group("/admin/products")
 		productAdmin.Use(middleware.RoleMiddleware("admin"))
 		{
 			productAdmin.POST("/", productHandler.Create)
@@ -80,15 +80,29 @@ func init() {
 			productAdmin.DELETE("/:id", productHandler.Delete)
 		}
 
-		points := api.Group("/points")
+		// points := api.Group("/points")
+		// {
+		// 	points.GET("/history", pHandler.GetHistory)
+		// 	points.POST("/", middleware.RoleMiddleware("admin"), pHandler.CreatePoint)
+		// 	points.GET("/all", middleware.RoleMiddleware("admin"), pHandler.GetAllSummaries)
+		// }
+
+		// Route untuk User Biasa
+		pointsUser := api.Group("/points")
 		{
-			points.GET("/history", pHandler.GetHistory)
-			points.POST("/", middleware.RoleMiddleware("admin"), pHandler.CreatePoint)
-			points.GET("/all", middleware.RoleMiddleware("admin"), pHandler.GetAllSummaries)
+			pointsUser.GET("/history", pHandler.GetHistory)
+		}
+
+		// Route untuk Admin
+		pointsAdmin := api.Group("/admin/points")
+		pointsAdmin.Use(middleware.RoleMiddleware("admin"))
+		{
+			pointsAdmin.POST("/", pHandler.CreatePoint)
+			pointsAdmin.GET("/all", pHandler.GetAllSummaries)
 		}
 
 		api.GET("/news", newsHandler.GetAll)
-		newsAdmin := api.Group("/news")
+		newsAdmin := api.Group("/admin/news")
 		newsAdmin.Use(middleware.RoleMiddleware("admin"))
 		{
 			newsAdmin.POST("/", newsHandler.Create)
