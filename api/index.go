@@ -4,9 +4,9 @@ import (
 	"net/http"
 	"os"
 
-	"ybg-backend-copy/modules/delivery/http/middleware"
-	"ybg-backend-copy/modules/repository"
-	"ybg-backend-copy/modules/wire" // Pastikan import path ini benar
+	"ybg-backend-copy/internal/delivery/http/middleware"
+	"ybg-backend-copy/internal/repository"
+	"ybg-backend-copy/internal/wire" // Pastikan import path ini benar
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
