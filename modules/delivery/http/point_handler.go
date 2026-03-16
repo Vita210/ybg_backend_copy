@@ -2,7 +2,7 @@ package http
 
 import (
 	"net/http"
-	"ybg-backend-copy/internal/usecase"
+	"ybg-backend-copy/modules/usecase"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
