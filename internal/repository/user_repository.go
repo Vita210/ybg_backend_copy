@@ -1,7 +1,7 @@
 package repository
 
 import (
-	"ybg-backend-copy/modules/entity"
+	"ybg-backend-copy/internal/entity"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
