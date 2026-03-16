@@ -3,7 +3,7 @@ package repository
 import (
 	"log"
 	"time"
-	"ybg-backend-copy/modules/entity"
+	"ybg-backend-copy/internal/entity"
 	"ybg-backend-copy/pkg/utils"
 
 	"github.com/google/uuid"

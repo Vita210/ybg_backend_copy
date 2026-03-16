@@ -3,8 +3,8 @@ package usecase
 import (
 	"errors"
 	"time"
-	"ybg-backend-copy/modules/entity"
-	"ybg-backend-copy/modules/repository"
+	"ybg-backend-copy/internal/entity"
+	"ybg-backend-copy/internal/repository"
 	"ybg-backend-copy/pkg/utils"
 
 	"github.com/google/uuid"
